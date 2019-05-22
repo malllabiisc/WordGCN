@@ -1,6 +1,6 @@
 ## Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks
 
-Source code for [ACL 2019](http://acl2019.org) submission: Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks.
+Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks](https://arxiv.org/abs/1809.04283).
 
 ​    		   ![test image size](./images/syngcn_model.png){:height="1000px" width="500px"}   
 
@@ -56,3 +56,12 @@ Source code for [ACL 2019](http://acl2019.org) submission: Incorporating Syntact
   ```
 
 - The fine-tuned embeddings will be saved in `./embeddings` directory with name `fine_tuned_embeddings`. 
+
+### Citation:
+Please cite the following paper if you use this code in your work.
+
+```tex
+
+```
+
+For any clarification, comments, or suggestions please create an issue or contact [shikhar@iisc.ac.in](http://shikhar-vashishth.github.io).
