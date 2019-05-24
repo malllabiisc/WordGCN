@@ -47,7 +47,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
   <img align="center" src="https://github.com/malllabiisc/WordGCN/blob/master/images/semgcn_model.png" alt="...">
 </p>
 
-- Pre-trained 300-dimensional `SynGCN` embeddings can be downloaded from [here](https://drive.google.com/open?id=17wgNSMkyQwVHeHipk_Mp3y2Q0Kvhu6Mm). 
+- Pre-trained 300-dimensional `SynGCN` embeddings can be downloaded from [here](https://drive.google.com/file/d/1wYgdyjIBC6nIC-bX29kByA0GwnUSR9Hh/view?usp=sharing). 
 - For incorporating semantic information in given embedding run:
   ```shell
   python semgcn.py -embed ./embeddings/pretrained_embed.txt 
