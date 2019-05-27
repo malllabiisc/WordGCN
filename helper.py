@@ -8,17 +8,34 @@ from collections import defaultdict as ddict
 
 np.set_printoptions(precision=4)
 
-def mergeList(list_of_list):
-	return list(itertools.chain.from_iterable(list_of_list))
-
-def checkFile(filename):
-	return pathlib.Path(filename).is_file()
-
 def set_gpu(gpus):
+	"""
+	Sets the GPU to be used for the run
+
+	Parameters
+	----------
+	gpus:           List of GPUs to be used for the run
+	
+	Returns
+	-------    
+	"""
 	os.environ["CUDA_DEVICE_ORDER"]    = "PCI_BUS_ID"
 	os.environ["CUDA_VISIBLE_DEVICES"] = gpus
 
 def debug_nn(res_list, feed_dict):
+	"""
+	Function for debugging Tensorflow model      
+
+	Parameters
+	----------
+	res_list:       List of tensors/variables to view
+	feed_dict:	Feed dict required for getting values
+	
+	Returns
+	-------
+	Returns the list of values of given tensors/variables after execution
+
+	"""
 	import tensorflow as tf
 	
 	config = tf.ConfigProto()
@@ -30,6 +47,20 @@ def debug_nn(res_list, feed_dict):
 	return res
 
 def get_logger(name, log_dir, config_dir):
+	"""
+	Creates a logger object
+
+	Parameters
+	----------
+	name:           Name of the logger file
+	log_dir:        Directory where logger file needs to be stored
+	config_dir:     Directory from where log_config.json needs to be read
+	
+	Returns
+	-------
+	A logger object which writes to both file and stdout
+		
+	"""
 	config_dict = json.load(open( config_dir + 'log_config.json'))
 	config_dict['handlers']['file_handler']['filename'] = log_dir + name.replace('/', '-')
 	logging.config.dictConfig(config_dict)
@@ -42,14 +73,33 @@ def get_logger(name, log_dir, config_dir):
 
 	return logger
 
-def partition(lst, n):
-        division = len(lst) / float(n)
-        return [ lst[int(round(division * i)): int(round(division * (i + 1)))] for i in range(n) ]
-
 def getChunks(inp_list, chunk_size):
+	"""
+	Splits inp_list into lists of size chunk_size
+
+	Parameters
+	----------
+	inp_list:       List to be splittted
+	chunk_size:     Size of each chunk required
+	
+	Returns
+	-------
+	chunks of the inp_list each of size chunk_size, last one can be smaller (leftout data)
+	"""
 	return [inp_list[x:x+chunk_size] for x in range(0, len(inp_list), chunk_size)]
 
 def read_mappings(fname):
+	"""
+	A helper function for reading an object to identifier mapping
+
+	Parameters
+	----------
+	fname:		Name of the file containing mapping
+
+	Returns
+	-------
+	mapping:	Dictionary object containing mapping information
+	"""
 	mapping = {}
 	for line in open(fname):
 		vals = line.strip().split('\t')
@@ -58,6 +108,19 @@ def read_mappings(fname):
 	return mapping
 
 def getEmbeddings(embed_loc, wrd_list, embed_dims):
+	"""
+	Gives embedding for each word in wrd_list
+
+	Parameters
+	----------
+	model:		Word2vec model
+	wrd_list:	List of words for which embedding is required
+	embed_dims:	Dimension of the embedding
+
+	Returns
+	-------
+	embed_matrix:	(len(wrd_list) x embed_dims) matrix containing embedding for each word in wrd_list in the same order
+	"""
 	embed_list = []
 
 	wrd2embed = {}

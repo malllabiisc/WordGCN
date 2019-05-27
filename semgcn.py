@@ -6,9 +6,23 @@ import tensorflow as tf
 from web.embedding import Embedding
 from web.evaluate  import evaluate_on_all
 
-class RFGCN(Model):
+class SemGCN(Model):
 
 	def make_batch(self, shuffle = True):
+		"""
+		Generates batches and puts them in the queue
+
+		Parameters
+		----------
+		shuffle:	Whether to shuffle batches or not
+
+		Returns
+		-------
+		A batch in the form of a diciontary
+			Edges:	Dependency parse edges
+			Words:	Word in the batch
+			Cur_len:Total number of words in each sentence
+		"""
 		batch = []
 		self.sent_num = 0
 		num_batch = 0
@@ -36,6 +50,17 @@ class RFGCN(Model):
 		self.batch_queue.put(None)
 
 	def getBatches(self, shuffle = True):
+		"""
+		Returns a generator of batches
+
+		Parameters
+		----------
+		shuffle:	Whether to shuffle batches or not
+
+		Returns
+		-------
+		Batch generator
+		"""
 		self.read_thread = Thread(target = self.make_batch)
 		self.read_thread.daemon = True
 		self.read_thread.start()
@@ -49,7 +74,26 @@ class RFGCN(Model):
 			else:		  yield batch
 
 	def load_data(self):
-		print("Loading data")
+		"""
+		Loads the data 
+
+		Parameters
+		----------
+		voc2id:		Mapping of word to its unique identifier
+		id2voc:		Inverse of voc2id
+		id2freq:	Mapping of word id to its frequency in the corpus
+		wrd_list:	List of words for which embedding is required
+		embed_dims:	Dimension of the embedding
+		voc_size:	Total number of words in vocabulary
+		wrd_list:	List of words in the vocabulary
+		de2id:		Mapping of edge labels of dependency parse to unique identifier
+		num_deLabel:	Number of edge types in dependency graph
+		rej_prob:	Word rejection probability (frequent words are rejected with higher frequency)
+
+		Returns
+		-------
+		"""
+		self.logger.info("Loading data")
 
 		self.voc2id         = read_mappings('./data/voc2id.txt'); self.voc2id  = {k: int(v) for k, v in self.voc2id.items()}
 		self.id2voc 	    = {v:k for k, v in self.voc2id.items()}
@@ -74,6 +118,20 @@ class RFGCN(Model):
 			self.num_labels += 1
 
 	def add_placeholders(self):
+		"""
+		Placeholders for the computational graph
+
+		Parameters
+		----------
+		sent_wrds:	All words in the batch
+		sent_mask:	Mask for removing padding
+		adj_mat:	Adjacnecy matrix for each sentence in the batch
+		num_words:	Total number of words in each sentence
+		seq_len:	Maximum length of sentence in the entire batch
+
+		Returns
+		-------
+		"""
 		self.sent_wrds 		= tf.placeholder(tf.int32,     	shape=[self.p.batch_size, None],     	 	     	name='sent_wrds')
 		self.sent_mask 		= tf.placeholder(tf.float32,   	shape=[self.p.batch_size, None],     	 	     	name='sent_mask')
 		self.adj_mat   		= tf.placeholder(tf.bool,      	shape=[self.num_labels, self.p.batch_size, None, None], name='adj_ind')
@@ -81,6 +139,19 @@ class RFGCN(Model):
 		self.seq_len   		= tf.placeholder(tf.int32,   	shape=(), 		   				name='seq_len')
 
 	def get_adj(self, edgeList, max_labels, max_nodes):
+		"""
+		Returns the adjacency matrix required for applying GCN 
+
+		Parameters
+		----------
+		edgeList:	List of all edges
+		max_labels:	Maximum number of edge labels in dependency parse
+		max_nodes:	Maximum number of words in the batch
+
+		Returns
+		-------
+		Adjacency matrix shape=[Number of dependency labels, Batch size, seq_len, seq_len]
+		"""
 		adj_mat  = np.zeros((max_labels, self.p.batch_size, max_nodes, max_nodes), np.bool)
 		for i, edges in enumerate(edgeList):
 			for j, (src, dest, lbl) in enumerate(edges):
@@ -89,6 +160,20 @@ class RFGCN(Model):
 		return adj_mat
 
 	def padData(self, data, seq_len, cur_lens):
+		"""
+		Pads a given batch
+
+		Parameters
+		----------
+		data:		List of tokenized sentences in a batch
+		seq_len:	Maximum length of sentence in the batch
+		cur_len:	Total number of words in each sentence in a batch
+
+		Returns
+		-------
+		temp:		Padded word sequence
+		mask:		Masking for padded words
+		"""
 		temp = np.full((len(data),  seq_len), self.vocab_size, np.int32)
 		mask = np.zeros((len(data), seq_len), np.float32)
 
@@ -99,12 +184,37 @@ class RFGCN(Model):
 		return temp, mask
 
 	def pad_dynamic(self, Words, cur_lens):
+		"""
+		Pads a given batch
+
+		Parameters
+		----------
+		Words:		List of tokenized sentences in a batch
+		cur_len:	Total number of words in each sentence in a batch
+
+		Returns
+		-------
+		Word_pad:	Padded word sequence
+		Words_mask:	Masking for padded words
+		seq_len:	Maximum length of sentence in the batch
+		"""
 		seq_len     	      = max([len(wrds) for wrds in Words])
 		Words_pad, Words_mask = self.padData(Words, seq_len, cur_lens)
 
 		return Words_pad, Words_mask, seq_len
 
 	def create_feed_dict(self, batch):
+		"""
+		Creates the feed dictionary
+
+		Parameters
+		----------
+		batch:		Batch as returned by getBatch generator
+
+		Returns
+		-------
+		feed_dict:	Feed dictionary
+		"""
 		Words   = [ele['Words'] for ele in batch]
 		Edges   = [ele['Edges'] for ele in batch]
 		Cur_len = [ele['Cur_len'] for ele in batch]
@@ -117,35 +227,44 @@ class RFGCN(Model):
 
 		return feed_dict
 
-	def aggregate(self, inp, adj_mat, test):
-		if self.p.aggregate == 'sum':
-			in_t = tf.matmul(tf.cast(adj_mat, tf.float32), inp)
+	def aggregate(self, inp, adj_mat):
+		"""
+		GCN aggregation operation
 
-		elif self.p.aggregate == 'mean':
-			in_t = tf.matmul(tf.cast(adj_mat, tf.float32), inp) / tf.expand_dims(tf.reduce_sum(tf.cast(adj_mat, tf.float32), axis=2)+1, axis=2)
+		Parameters
+		----------
+		inp:		Action from neighborhood nodes
+		adj_mat:	Adjacency matrix
 
-		elif self.p.aggregate == 'max':
-			mask = tf.transpose(
-					tf.reshape(
-						tf.tile(
-							adj_mat, [1,1,self.p.embed_dim]
-						), [self.p.batch_size, self.seq_len, self.p.embed_dim, self.seq_len]
-					), [0,1,3,2]
-				)
-			mask  = tf.cast(mask, tf.float32)
-			in_t_ = tf.expand_dims(inp, axis=1) * mask
-			min_t = tf.reduce_min(in_t_, axis=2)
-			in_t  = tf.reduce_max(
-					(in_t_ - tf.expand_dims(min_t, axis=2) * mask),
-					axis=2
-				) + min_t
-		else:
-			raise NotImplementedError('Found {} , expected sum, mean or max'.format(self.p.aggregate))
-
-		return in_t
+		Returns
+		-------
+		out:		Embedding obtained after aggregation operation
+		"""
+		return tf.matmul(tf.cast(adj_mat, tf.float32), inp)
 
 
 	def gcnLayer(self, gcn_in, in_dim, gcn_dim, batch_size, max_nodes, max_labels, adj_mat, w_gating=True, num_layers=1, name="GCN"):
+		"""
+		GCN Layer Implementation
+
+		Parameters
+		----------
+		gcn_in:		Input to GCN Layer
+		in_dim:		Dimension of input to GCN Layer 
+		gcn_dim:	Hidden state dimension of GCN
+		batch_size:	Batch size
+		max_nodes:	Maximum number of nodes in graph
+		max_labels:	Maximum number of edge labels
+		adj_ind:	Adjacency matrix indices
+		adj_data:	Adjacency matrix data (all 1's)
+		w_gating:	Whether to include gating in GCN
+		num_layers:	Number of GCN Layers
+		name 		Name of the layer (used for creating variables, keep it different for different layers)
+
+		Returns
+		-------
+		out		List of output of different GCN layers with first element as input itself, i.e., [gcn_in, gcn_layer1_out, gcn_layer2_out ...]
+		"""
 		out = []
 		out.append(gcn_in)
 
@@ -183,12 +302,12 @@ class RFGCN(Model):
 					with tf.name_scope('in_arcs-%s_name-%s_layer-%d' % (lbl, name, layer)):
 						inp_in     = tf.tensordot(gcn_in, w_in, axes=[2,0]) + tf.expand_dims(b_in, axis=0)
 						adj_matrix = tf.transpose(adj_mat[lbl], [0,2,1])
-						in_t 	   = self.aggregate(inp_in, adj_matrix, self.p.embed_dim)
+						in_t 	   = self.aggregate(inp_in, adj_matrix)
 
 						if self.p.dropout != 1.0: in_t    = tf.nn.dropout(in_t, keep_prob=self.p.dropout)
 						if w_gating:
 							inp_gin = tf.tensordot(gcn_in, w_gin, axes=[2,0]) + tf.expand_dims(b_gin, axis=0)
-							in_gate = self.aggregate(inp_gin, adj_matrix, 1)
+							in_gate = self.aggregate(inp_gin, adj_matrix)
 							in_gsig = tf.sigmoid(in_gate)
 							in_act  = in_t * in_gsig
 						else:
@@ -199,13 +318,13 @@ class RFGCN(Model):
 					with tf.name_scope('out_arcs-%s_name-%s_layer-%d' % (lbl, name, layer)):
 						inp_out    = tf.tensordot(gcn_in, w_out, axes=[2,0]) + tf.expand_dims(b_out, axis=0)
 						adj_matrix = adj_mat[lbl]
-						out_t      = self.aggregate(inp_out, adj_matrix, self.p.embed_dim)
+						out_t      = self.aggregate(inp_out, adj_matrix)
 
 						if self.p.dropout != 1.0: out_t    = tf.nn.dropout(out_t, keep_prob=self.p.dropout)
 
 						if w_gating:
 							inp_gout = tf.tensordot(gcn_in, w_gout, axes=[2,0]) + tf.expand_dims(b_gout, axis=0)
-							out_gate = self.aggregate(inp_gout, adj_matrix, 1)
+							out_gate = self.aggregate(inp_gout, adj_matrix)
 							out_gsig = tf.sigmoid(out_gate)
 							out_act  = out_t * out_gsig
 						else:
@@ -220,6 +339,16 @@ class RFGCN(Model):
 		return out
 
 	def add_model(self):
+		"""
+		Creates the Computational Graph
+
+		Parameters
+		----------
+
+		Returns
+		-------
+		nn_out:		Logits for each bag in the batch
+		"""
 
 		with tf.variable_scope('Embed_mat'):
 			embed_init   	    = getEmbeddings(self.p.embed_loc, [self.id2voc[i] for i in range(len(self.voc2id))], self.p.embed_dim)
@@ -238,6 +367,18 @@ class RFGCN(Model):
 		return nn_out
 
 	def add_loss_op(self, nn_out):
+		"""
+		Computes the loss for learning embeddings
+
+		Parameters
+		----------
+		nn_out:		Logits for each bag in the batch
+
+		Returns
+		-------
+		loss:		Computes loss
+		"""
+
 		target_words = tf.reshape(self.sent_wrds, [-1, 1])
 		nn_out_flat  = tf.reshape(nn_out, [-1, self.p.embed_dim])
 
@@ -280,6 +421,17 @@ class RFGCN(Model):
 		return loss
 
 	def add_optimizer(self, loss, isAdam=True):
+		"""
+		Add optimizer for training variables
+
+		Parameters
+		----------
+		loss:		Computed loss
+
+		Returns
+		-------
+		train_op:	Training optimizer
+		"""
 		with tf.name_scope('Optimizer'):
 			if isAdam:  optimizer = tf.train.AdamOptimizer(self.p.lr)
 			else:       optimizer = tf.train.GradientDescentOptimizer(self.p.lr)
@@ -288,6 +440,16 @@ class RFGCN(Model):
 		return train_op
 
 	def __init__(self, params):
+		"""
+		Constructor for the main function. Loads data and creates computation graph. 
+
+		Parameters
+		----------
+		params:		Hyperparameters of the model
+
+		Returns
+		-------
+		"""
 		self.p  = params
 		self.logger = get_logger(self.p.name, self.p.log_dir, self.p.config_dir)
 
@@ -310,6 +472,17 @@ class RFGCN(Model):
 		self.summ_writer = None
 
 	def checkpoint(self, loss, epoch, sess):
+		"""
+		Computes intrinsic scores for embeddings and dumps the embeddings embeddings
+
+		Parameters
+		----------
+		epoch:		Current epoch number
+		sess:		Tensorflow session object
+
+		Returns
+		-------
+		"""
 		embed_matrix, \
 		context_matrix 	= sess.run([self.embed_matrix, self.context_matrix])
 		voc2vec 	= {wrd: embed_matrix[wid] for wrd, wid in self.voc2id.items()}
@@ -322,7 +495,7 @@ class RFGCN(Model):
 
 		if curr_int > self.best_int_avg:
 			if self.p.dump:
-				print("Saving embedding matrix")
+				self.logger.info("Saving embedding matrix")
 				f = open('embeddings/{}'.format(self.p.name), 'w')
 				for id, wrd in self.id2voc.items():
 					f.write('{} {}\n'.format(wrd, ' '.join([str(round(v, 6)) for v in embed_matrix[id].tolist()])))
@@ -330,6 +503,19 @@ class RFGCN(Model):
 			self.best_int_avg = curr_int
 
 	def run_epoch(self, sess, epoch, shuffle=True):
+		"""
+		Runs one epoch of training
+
+		Parameters
+		----------
+		sess:		Tensorflow session object
+		epoch:		Epoch number
+		shuffle:	Shuffle data while before creates batches
+
+		Returns
+		-------
+		loss:		Loss over the corpus
+		"""
 		losses = []
 
 		st = time.time()
@@ -343,13 +529,23 @@ class RFGCN(Model):
 				self.logger.info('E:{} (Sents: {}/{} [{}]): Train Loss \t{:.5}\t{}\t{:.5}'.format(epoch, self.sent_num, self.p.total_sents, round(self.sent_num/self.p.total_sents * 100 , 1), np.mean(losses), self.p.name, self.best_int_avg))
 				en = time.time()
 				if (en-st) >= 3600:
-					print("One more hour is over")
+					self.logger.info("One more hour is over")
 					self.checkpoint(np.mean(losses), epoch, sess)
 					st = time.time()
 
 		return np.mean(losses)
 
 	def fit(self, sess):
+		"""
+		Trains the model and finally evaluates on test
+
+		Parameters
+		----------
+		sess:		Tensorflow session object
+
+		Returns
+		-------
+		"""
 		self.saver     = tf.train.Saver()
 		save_dir       = 'checkpoints/' + self.p.name + '/'
 		if not os.path.exists(save_dir): os.makedirs(save_dir)
@@ -385,7 +581,6 @@ if __name__== "__main__":
 	parser.add_argument('-opt',      dest="opt",            default='adam',             		help='Optimizer to use for training')
 	parser.add_argument('-neg',      dest="neg_samples",    default=200,		type=int,       help='Number of negative samples')
 	parser.add_argument('-gcn_layer',dest="gcn_layer",      default=1,		type=int,       help='Number of layers in GCN over dependency tree')
-	parser.add_argument('-agg',  	 dest="aggregate",      default='sum',             		help='Aggregation function for GCN')
 	parser.add_argument('-noGate',   dest="wGate",          action='store_false',       		help='Use gating in GCN')
 	parser.add_argument('-drop',     dest="dropout",        default=1.0,		type=float,     help='Dropout for full connected layer')
 	parser.add_argument('-semantic', dest="semantic",       default='synonyms',             	help='Which semantic information to use')
@@ -404,7 +599,7 @@ if __name__== "__main__":
 	np.random.seed(args.seed)
 	set_gpu(args.gpu)
 
-	model = RFGCN(args)
+	model = SemGCN(args)
 
 	config = tf.ConfigProto()
 	config.gpu_options.allow_growth=True

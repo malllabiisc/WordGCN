@@ -93,13 +93,11 @@ int getBatch(	int *edges, 		// Edges in the sentence graph
 	     	int num_neg, 		// Number of negtive samples
 	     	int batch_size, 	// Batchsize
 	     	float sample,		// Paramter for deciding rate of subsampling
-	     	int mode		// mode=0: only dependency edges, mode=1: only context, mode=3: both dependency and context
 	 ) {		
 
 	cnt_edges = 0, cnt_wrds = 0, cnt_negs = 0, cnt_sample = 0;				// Count of number of edges, words, negs, samples in the entire batch
 
-	if(mode == 0 || mode == 2) cntxt_edge_label = de2id.size();
-	else			   cntxt_edge_label = 0;
+	cntxt_edge_label = de2id.size();
 	
 	for (int i = 0; i < batch_size; i++) {
 		b_elen = 0, b_wlen = 0;								// Count of number of edges and word in particular element of batch
@@ -134,26 +132,10 @@ int getBatch(	int *edges, 		// Edges in the sentence graph
 
 		for(j = 0; j < num_deps; j++){							// Including dependency edges
 			tmp = fscanf(fin, "%d|%d|%d ", &src, &dest, &lbl);
-			if (mode == 0 || mode == 2){
-				edges[cnt_edges*3 + 0] = src;
-				edges[cnt_edges*3 + 1] = dest;
-				edges[cnt_edges*3 + 2] = lbl;
-				cnt_edges++; b_elen++;
-			}
-		}
-
-		if (mode == 1 || mode == 2){
-			for(k = 0; k < num_wrds; k++){						// Including context edges
-				for(j=-win_size; j<=win_size; j++){
-					idx = k + j;
-					if (idx >=0 && idx < num_wrds && idx != k){
-						edges[cnt_edges*3 + 0] = idx;
-						edges[cnt_edges*3 + 1] = k;
-						edges[cnt_edges*3 + 2] = cntxt_edge_label;
-						cnt_edges++; b_elen++;
-					}
-				}
-			}
+			edges[cnt_edges*3 + 0] = src;
+			edges[cnt_edges*3 + 1] = dest;
+			edges[cnt_edges*3 + 2] = lbl;
+			cnt_edges++; b_elen++;
 		}
 
 		wlen[i] = b_wlen;

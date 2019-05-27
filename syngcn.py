@@ -5,9 +5,26 @@ from sparse import COO
 from web.embedding import Embedding
 from web.evaluate  import evaluate_on_all
 
-class WordGCN(Model):
+class SynGCN(Model):
 
 	def getBatches(self, shuffle = True):
+		"""
+		Returns a generator for creating batches
+
+		Parameters
+		----------
+		shuffle:	Whether to shuffle batches or not
+
+		Returns
+		-------
+		A batch in the form of a diciontary
+			edges:	Dependency parse edges
+			wrds:	Word in the batch
+			negs:	List of negative samples
+			sample: Subsampled words indicator
+			elen:	Total number of edges in each sentence
+			wlen:	Total number of words in each sentence
+		"""
 		self.lib.reset()
 		while True:
 			max_len = 0;
@@ -17,15 +34,37 @@ class WordGCN(Model):
 			yield {'edges': self.edges, 'wrds': self.wrds, 'negs': self.negs, 'sample': self.samp, 'elen': self.elen, 'wlen': self.wlen}
 
 	def load_data(self):
-		print("Loading data")
+		"""
+		Loads the text corpus and C++ batch creation script 
+
+		Parameters
+		----------
+		voc2id:		Mapping of word to its unique identifier
+		id2voc:		Inverse of voc2id
+		id2freq:	Mapping of word id to its frequency in the corpus
+		wrd_list:	List of words for which embedding is required
+		embed_dims:	Dimension of the embedding
+		voc_size:	Total number of words in vocabulary
+		wrd_list:	List of words in the vocabulary
+		de2id:		Mapping of edge labels of dependency parse to unique identifier
+		num_deLabel:	Number of edge types in dependency graph
+		rej_prob:	Word rejection probability (frequent words are rejected with higher frequency)
+
+		Returns
+		-------
+		"""
+		self.logger.info("Loading data")
 
 		self.voc2id         = read_mappings('./data/voc2id.txt');   self.voc2id  = {k:      int(v) for k, v in self.voc2id.items()}
 		self.id2freq        = read_mappings('./data/id2freq.txt');  self.id2freq = {int(k): int(v) for k, v in self.id2freq.items()}
-		self.de2id	    = read_mappings('./data/de2id.txt');    self.de2id   = {k:      int(v) for k, v in self.de2id.items()}; 
 		self.id2voc 	    = {v:k for k, v in self.voc2id.items()}
 		self.vocab_size     = len(self.voc2id)
 		self.wrd_list	    = [self.id2voc[i] for i in range(self.vocab_size)]
 
+		self.de2id	    = read_mappings('./data/de2id.txt');    self.de2id   = {k:      int(v) for k, v in self.de2id.items()}; 
+		self.num_deLabel    = len(self.de2id)
+
+		# Calculating rejection probability
 		corpus_size    	    = np.sum(list(self.id2freq.values()))
 		rel_freq 	    = {_id: freq/corpus_size for _id, freq in self.id2freq.items()}
 		self.rej_prob 	    = {_id: (1-self.p.sample/rel_freq[_id])-np.sqrt(self.p.sample/rel_freq[_id]) for _id in self.id2freq}
@@ -33,9 +72,10 @@ class WordGCN(Model):
 
 		if not self.p.context: self.p.win_size = 0
 
-		self.lib = ctypes.cdll.LoadLibrary('./batchGen.so')
+		self.lib = ctypes.cdll.LoadLibrary('./batchGen.so')			# Loads the C++ code for making batches
 		self.lib.init()
 
+		# Creating pointers required for creating batches
 		self.edges 	= np.zeros(800 * self.p.batch_size*3, dtype=np.int32)
 		self.wrds     	= np.zeros(40  * self.p.batch_size,   dtype=np.int32)
 		self.samp  	= np.zeros(40  * self.p.batch_size,   dtype=np.int32)
@@ -43,6 +83,7 @@ class WordGCN(Model):
 		self.wlen  	= np.zeros(self.p.batch_size, dtype=np.int32)
 		self.elen  	= np.zeros(self.p.batch_size, dtype=np.int32)
 
+		# Pointer address of above arrays
 		self.edges_addr = self.edges. __array_interface__['data'][0]
 		self.wrds_addr  = self.wrds.  __array_interface__['data'][0]
 		self.negs_addr  = self.negs.  __array_interface__['data'][0]
@@ -50,17 +91,23 @@ class WordGCN(Model):
 		self.wlen_addr  = self.wlen.  __array_interface__['data'][0]
 		self.elen_addr  = self.elen.  __array_interface__['data'][0]
 
-		if self.p.context == True and self.p.wSyntactic == True: 
-			self.mode = 2
-			self.num_deLabel = len(self.de2id) + 1
-		elif self.p.context == True:				 
-			self.mode = 1
-			self.num_deLabel = 1
-		else:						 
-			self.mode = 0
-			self.num_deLabel = len(self.de2id)
 
 	def add_placeholders(self):
+		"""
+		Placeholders for the computational graph
+
+		Parameters
+		----------
+		sent_wrds:	All words in the batch
+		sent_mask:	Mask for removing padding
+		neg_wrds:	Negative samples
+		adj_mat:	Adjacnecy matrix for each sentence in the batch
+		num_words:	Total number of words in each sentence
+		seq_len:	Maximum length of sentence in the entire batch
+
+		Returns
+		-------
+		"""
 		self.sent_wrds 		= tf.placeholder(tf.int32,     	shape=[self.p.batch_size, None],     	 	     	 name='sent_wrds')
 		self.sent_mask 		= tf.placeholder(tf.float32,   	shape=[self.p.batch_size, None],     	 	     	 name='sent_mask')
 		self.neg_wrds   	= tf.placeholder(tf.int32,      shape=[self.p.batch_size, None, self.p.num_neg], 	 name='neg_wrds')
@@ -69,6 +116,18 @@ class WordGCN(Model):
 		self.seq_len   		= tf.placeholder(tf.int32,   	shape=(), 		   				 name='seq_len')
 
 	def get_adj(self, batch, seq_len):
+		"""
+		Returns the adjacency matrix required for applying GCN 
+
+		Parameters
+		----------
+		batch:		batch returned by getBatch generator
+		seq_len:	Maximum length of sentence in the batch
+
+		Returns
+		-------
+		Adjacency matrix shape=[Number of dependency labels, Batch size, seq_len, seq_len]
+		"""
 		num_edges = np.sum(batch['elen'])
 		b_ind     = np.expand_dims(np.repeat(np.arange(self.p.batch_size), batch['elen']), axis=1)
 		e_ind     = np.reshape(batch['edges'], [-1, 3])[:num_edges]
@@ -80,38 +139,47 @@ class WordGCN(Model):
 		return COO(adj_ind.T, adj_data, shape=(self.num_deLabel, self.p.batch_size, seq_len, seq_len)).todense()
 
 	def pad_data(self, data, dlen, sub_sample=[]):
+		"""
+		Pads a given batch
+
+		Parameters
+		----------
+		data:		List of tokenized sentences in a batch
+		dlen:		Total number of words in each sentence in a batch
+
+		Returns
+		-------
+		data_pad:	Padded word sequence
+		data_mask:	Masking for padded words
+		max_len:	Maximum length of sentence in the batch
+		"""
 		max_len   = np.max(dlen)
 		data_pad  = np.zeros([len(dlen), max_len], dtype=np.int32)
 		data_mask = np.zeros([len(dlen), max_len], dtype=np.float32)
 
-		try:
-			offset = 0
-			for i in range(len(dlen)):
-				data_pad [i, :dlen[i]] = data[offset: offset + dlen[i]]
-				data_mask[i, :dlen[i]] = 1
-				if len(sub_sample) != 0:
-					data_mask[i, :dlen[i]] *= sub_sample[offset: offset + dlen[i]]
-				offset += dlen[i]
-		except Exception as e:
-			print('\nException Cause: {}'.format(e.args[0]))
-			pdb.set_trace()
+		offset = 0
+		for i in range(len(dlen)):
+			data_pad [i, :dlen[i]] = data[offset: offset + dlen[i]]
+			data_mask[i, :dlen[i]] = 1
+			if len(sub_sample) != 0:
+				data_mask[i, :dlen[i]] *= sub_sample[offset: offset + dlen[i]]
+			offset += dlen[i]
 
 		return data_pad, data_mask, max_len
 
-	def pad_data_neg(self, data, dlen):
-		max_len   = np.max(dlen)
-		num_neg   = data.shape[1]
-		data_pad  = np.zeros([len(dlen), max_len, num_neg], dtype=np.int32)
-
-		offset = 0
-		for i in range(len(dlen)):
-			data_pad[i, :dlen[i]] = data[offset: offset + dlen[i]]
-			offset += dlen[i]
-
-		return data_pad
-
 
 	def create_feed_dict(self, batch):
+		"""
+		Creates the feed dictionary
+
+		Parameters
+		----------
+		batch:		Batch as returned by getBatch generator
+
+		Returns
+		-------
+		feed_dict:	Feed dictionary
+		"""
 		feed_dict = {}
 		wrds_pad, wrds_mask, seq_len 	= self.pad_data(batch['wrds'], batch['wlen'], sub_sample=batch['sample'])
 		feed_dict[self.sent_wrds] 	= wrds_pad
@@ -120,35 +188,43 @@ class WordGCN(Model):
 		feed_dict[self.adj_mat]   	= self.get_adj(batch, seq_len)
 		return feed_dict
 
-	def aggregate(self, inp, adj_mat, test):
-		if self.p.aggregate == 'sum':
-			in_t = tf.matmul(tf.cast(adj_mat, tf.float32), inp)
+	def aggregate(self, inp, adj_mat):
+		"""
+		GCN aggregation operation
 
-		elif self.p.aggregate == 'mean':
-			in_t = tf.matmul(tf.cast(adj_mat, tf.float32), inp) / tf.expand_dims(tf.reduce_sum(tf.cast(adj_mat, tf.float32), axis=2)+1, axis=2)
+		Parameters
+		----------
+		inp:		Action from neighborhood nodes
+		adj_mat:	Adjacency matrix
 
-		elif self.p.aggregate == 'max':
-			mask = tf.transpose(
-					tf.reshape(
-						tf.tile(
-							adj_mat, [1,1,self.p.embed_dim]
-						), [self.p.batch_size, self.seq_len, self.p.embed_dim, self.seq_len]
-					), [0,1,3,2]
-				)
-			mask  = tf.cast(mask, tf.float32)
-			in_t_ = tf.expand_dims(inp, axis=1) * mask
-			min_t = tf.reduce_min(in_t_, axis=2)
-			in_t  = tf.reduce_max( 
-					(in_t_ - tf.expand_dims(min_t, axis=2) * mask), 
-					axis=2
-				) + min_t
-		else:
-			raise NotImplementedError('Found {} , expected sum, mean or max'.format(self.p.aggregate))
-
-		return in_t
-
+		Returns
+		-------
+		out:		Embedding obtained after aggregation operation
+		"""
+		return tf.matmul(tf.cast(adj_mat, tf.float32), inp)
 
 	def gcnLayer(self, gcn_in, in_dim, gcn_dim, batch_size, max_nodes, max_labels, adj_mat, w_gating=True, num_layers=1, name="GCN"):
+		"""
+		GCN Layer Implementation
+
+		Parameters
+		----------
+		gcn_in:		Input to GCN Layer
+		in_dim:		Dimension of input to GCN Layer 
+		gcn_dim:	Hidden state dimension of GCN
+		batch_size:	Batch size
+		max_nodes:	Maximum number of nodes in graph
+		max_labels:	Maximum number of edge labels
+		adj_ind:	Adjacency matrix indices
+		adj_data:	Adjacency matrix data (all 1's)
+		w_gating:	Whether to include gating in GCN
+		num_layers:	Number of GCN Layers
+		name 		Name of the layer (used for creating variables, keep it different for different layers)
+
+		Returns
+		-------
+		out		List of output of different GCN layers with first element as input itself, i.e., [gcn_in, gcn_layer1_out, gcn_layer2_out ...]
+		"""
 		out = []
 		out.append(gcn_in)
 
@@ -197,12 +273,12 @@ class WordGCN(Model):
 					with tf.name_scope('in_arcs-%s_name-%s_layer-%d' % (lbl, name, layer)):
 						inp_in     = tf.tensordot(gcn_in, w_in, axes=[2,0]) + tf.expand_dims(b_in, axis=0)
 						adj_matrix = tf.transpose(adj_mat[lbl], [0,2,1])
-						in_t 	   = self.aggregate(inp_in, adj_matrix, self.p.embed_dim)							
+						in_t 	   = self.aggregate(inp_in, adj_matrix)							
 
 						if self.p.dropout != 1.0: in_t    = tf.nn.dropout(in_t, keep_prob=self.p.dropout)
 						if w_gating:
 							inp_gin = tf.tensordot(gcn_in, w_gin, axes=[2,0]) + tf.expand_dims(b_gin, axis=0)
-							in_gate = self.aggregate(inp_gin, adj_matrix, 1)
+							in_gate = self.aggregate(inp_gin, adj_matrix)
 							in_gsig = tf.sigmoid(in_gate)
 							in_act  = in_t * in_gsig
 						else:
@@ -211,13 +287,13 @@ class WordGCN(Model):
 					with tf.name_scope('out_arcs-%s_name-%s_layer-%d' % (lbl, name, layer)):
 						inp_out    = tf.tensordot(gcn_in, w_out, axes=[2,0]) + tf.expand_dims(b_out, axis=0)
 						adj_matrix = adj_mat[lbl]
-						out_t      = self.aggregate(inp_out, adj_matrix, self.p.embed_dim)
+						out_t      = self.aggregate(inp_out, adj_matrix)
 
 						if self.p.dropout != 1.0: out_t    = tf.nn.dropout(out_t, keep_prob=self.p.dropout)
 
 						if w_gating:
 							inp_gout = tf.tensordot(gcn_in, w_gout, axes=[2,0]) + tf.expand_dims(b_gout, axis=0)
-							out_gate = self.aggregate(inp_gout, adj_matrix, 1)
+							out_gate = self.aggregate(inp_gout, adj_matrix)
 							out_gsig = tf.sigmoid(out_gate)
 							out_act  = out_t * out_gsig
 						else:
@@ -233,6 +309,16 @@ class WordGCN(Model):
 		return out
 
 	def add_model(self):
+		"""
+		Creates the Computational Graph
+
+		Parameters
+		----------
+
+		Returns
+		-------
+		nn_out:		Logits for each bag in the batch
+		"""
 
 		with tf.variable_scope('Embed_mat'):
 			_wrd_embed 	    = tf.get_variable('embed_matrix',   [self.vocab_size,  self.p.embed_dim], initializer=tf.contrib.layers.xavier_initializer(), regularizer=self.regularizer)
@@ -250,11 +336,23 @@ class WordGCN(Model):
 
 		gcn_out = self.gcnLayer(gcn_in 		= gcn_in, 		in_dim 	   = gcn_in_dim, 		gcn_dim    = self.p.embed_dim,
 					batch_size 	= self.p.batch_size, 	max_nodes  = self.seq_len, 		max_labels = self.num_deLabel,
-					adj_mat 	= self.adj_mat, 	w_gating   = self.p.wGate, 		num_layers = self.p.gcn_layer, 	name = "GCN")
+					adj_mat 	= self.adj_mat, 	num_layers = self.p.gcn_layer, 	name = "GCN")
 		nn_out = gcn_out[-1]
 		return nn_out
 
 	def add_loss_op(self, nn_out):
+		"""
+		Computes the loss for learning embeddings
+
+		Parameters
+		----------
+		nn_out:		Logits for each bag in the batch
+
+		Returns
+		-------
+		loss:		Computes loss
+		"""
+
 		target_words = tf.reshape(self.sent_wrds, [-1, 1])
 
 		neg_ids, _, _ = tf.nn.fixed_unigram_candidate_sampler(
@@ -294,6 +392,17 @@ class WordGCN(Model):
 		return loss
 
 	def add_optimizer(self, loss, isAdam=True):
+		"""
+		Add optimizer for training variables
+
+		Parameters
+		----------
+		loss:		Computed loss
+
+		Returns
+		-------
+		train_op:	Training optimizer
+		"""
 		with tf.name_scope('Optimizer'):
 			if isAdam:  optimizer = tf.train.AdamOptimizer(self.p.lr)
 			else:       optimizer = tf.train.GradientDescentOptimizer(self.p.lr)
@@ -302,6 +411,16 @@ class WordGCN(Model):
 		return train_op
 
 	def __init__(self, params):
+		"""
+		Constructor for the main function. Loads data and creates computation graph. 
+
+		Parameters
+		----------
+		params:		Hyperparameters of the model
+
+		Returns
+		-------
+		"""
 		self.p  = params
 		self.logger = get_logger(self.p.name, self.p.log_dir, self.p.config_dir)
 
@@ -322,16 +441,18 @@ class WordGCN(Model):
 
 		self.merged_summ = tf.summary.merge_all()
 
-	def check_batch(self, batch):
-		Words    = [ele['target']    for ele in batch]
-		DepEdges = [ele['dep_edges'] for ele in batch]
+	def checkpoint(self, epoch, sess):
+		"""
+		Computes intrinsic scores for embeddings and dumps the embeddings embeddings
 
-		for i, w in enumerate(Words):
-			print(self.id2voc[w])
-			context_words	= [self.id2voc[e[0]] for e in DepEdges[i] if e[1] == 1]
-			print(context_words)
+		Parameters
+		----------
+		epoch:		Current epoch number
+		sess:		Tensorflow session object
 
-	def checkpoint(self, loss, epoch, sess):
+		Returns
+		-------
+		"""
 		embed_matrix, \
 		context_matrix 	= sess.run([self.embed_matrix, self.context_matrix])
 		voc2vec 	= {wrd: embed_matrix[wid] for wrd, wid in self.voc2id.items()}
@@ -342,7 +463,7 @@ class WordGCN(Model):
 		self.logger.info('Current Score: {}'.format(curr_int))
 
 		if curr_int > self.best_int_avg:
-			print("Saving embedding matrix")
+			self.logger.info("Saving embedding matrix")
 			f = open('embeddings/{}'.format(self.p.dump_loc), 'w')
 			for id, wrd in self.id2voc.items():
 				f.write('{} {}\n'.format(wrd, ' '.join([str(round(v, 6)) for v in embed_matrix[id].tolist()])))
@@ -351,6 +472,19 @@ class WordGCN(Model):
 			self.best_int_avg = curr_int
 
 	def run_epoch(self, sess, epoch, shuffle=True):
+		"""
+		Runs one epoch of training
+
+		Parameters
+		----------
+		sess:		Tensorflow session object
+		epoch:		Epoch number
+		shuffle:	Shuffle data while before creates batches
+
+		Returns
+		-------
+		loss:		Loss over the corpus
+		"""
 		losses = []
 		cnt = 0
 
@@ -365,13 +499,23 @@ class WordGCN(Model):
 				self.logger.info('E:{} (Sents: {}/{} [{}]): Train Loss \t{:.5}\t{}\t{:.5}'.format(epoch, cnt, self.p.total_sents, round(cnt/self.p.total_sents * 100 , 1), np.mean(losses), self.p.name, self.best_int_avg))
 				en = time.time()
 				if (en-st) >= (3600):
-					print("One more hour is over")
-					self.checkpoint(np.mean(losses), epoch, sess)
+					self.logger.info("One more hour is over")
+					self.checkpoint(epoch, sess)
 					st = time.time()
 
 		return np.mean(losses)
 
 	def fit(self, sess):
+		"""
+		Trains the model and finally evaluates on test
+
+		Parameters
+		----------
+		sess:		Tensorflow session object
+
+		Returns
+		-------
+		"""
 		self.saver       = tf.train.Saver()
 		save_dir  	 = 'checkpoints/' + self.p.name + '/'
 		if not os.path.exists(save_dir): os.makedirs(save_dir)
@@ -386,7 +530,7 @@ class WordGCN(Model):
 			self.logger.info('Epoch: {}'.format(epoch))
 			train_loss = self.run_epoch(sess, epoch)
 
-			self.checkpoint(train_loss, epoch, sess)
+			self.checkpoint(epoch, sess)
 			self.logger.info('[Epoch {}]: Training Loss: {:.5}, Best Loss: {:.5}\n'.format(epoch, train_loss,  self.best_int_avg))
 
 
@@ -411,8 +555,6 @@ if __name__== "__main__":
 	parser.add_argument('-gcn_layer',dest="gcn_layer",      default=1,        type=int,     help='Number of layers in GCN over dependency tree')
 	parser.add_argument('-drop',     dest="dropout",        default=1.0,      type=float,   help='Dropout for full connected layer')
 	parser.add_argument('-opt',      dest="opt",            default='adam',             	help='Optimizer to use for training')
-	parser.add_argument('-agg',  	 dest="aggregate",      default='sum',             	help='Aggregation function for GCN')
-	parser.add_argument('-noGate',   dest="wGate",          action='store_false',       	help='Use gating in GCN')
 	parser.add_argument('-dump',  	 dest="onlyDump",       action='store_true',        	help='Dump context and embed matrix')
 	parser.add_argument('-context',  dest="context",        action='store_true',        	help='Include sequential context edges (default: False)')
 	parser.add_argument('-restore',  dest="restore",        action='store_true',        	help='Restore from the previous best saved model')
@@ -429,7 +571,7 @@ if __name__== "__main__":
 	np.random.seed(args.seed)
 	set_gpu(args.gpu)
 
-	model = WordGCN(args)
+	model = SynGCN(args)
 
 	config = tf.ConfigProto()
 	config.gpu_options.allow_growth=True
