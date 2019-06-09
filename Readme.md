@@ -31,7 +31,6 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
     - `tok_1, tok_2 ...` is the list of tokens in the sentence and `dep_e1, dep_e2 ...`is the list of dependency relations where each is of form `source_token|destination_token|dep_rel_label`.
 
 ### Training SynGCN embeddings:
-- The above model needs to be further trained with SGD optimizer for few epochs to match the performance reported in the paper. For that execute
 - Download the processed Wikipedia corpus ([link](https://drive.google.com/file/d/1S1UYXc3PfoNFcNY6tB5ahiugXh5qidz-/view?usp=sharing)) and extract it in `./data` directory.
 - Execute `make` to compile the C++ code for creating batches.
 - To start training run:
