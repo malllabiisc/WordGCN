@@ -92,7 +92,7 @@ int getBatch(	int *edges, 		// Edges in the sentence graph
 	     	int win_size, 		// Window size for linear context
 	     	int num_neg, 		// Number of negtive samples
 	     	int batch_size, 	// Batchsize
-	     	float sample,		// Paramter for deciding rate of subsampling
+	     	float sample		// Paramter for deciding rate of subsampling
 	 ) {		
 
 	cnt_edges = 0, cnt_wrds = 0, cnt_negs = 0, cnt_sample = 0;				// Count of number of edges, words, negs, samples in the entire batch
