@@ -25,7 +25,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
   * `de2id.txt` mapping of dependency relations to their unique identifiers. 
   * `data.txt` contains the entire Wikipedia corpus with each sentence of corpus stored in the following format:
     ```java
-    <num_words> <num_dep_rels> tok1 tok2 tok3 ... tokn dep_e1 dep_e2 .... dep_em ```
+    <num_words> <num_dep_rels> tok1 tok2 tok3 ... tokn dep_e1 dep_e2 .... dep_em
     ```
   
     - Here, `num_words` is the number of words and `num_dep_rels`  denotes the number of dependency relations in the sentence.
