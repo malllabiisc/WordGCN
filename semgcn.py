@@ -450,7 +450,11 @@ class SemGCN(Model):
 		Returns
 		-------
 		"""
-		self.p  = params
+		self.p = params
+
+		if not os.path.isdir(self.p.log_dir): os.system('mkdir {}'.format(self.p.log_dir))
+		if not os.path.isdir(self.p.emb_dir): os.system('mkdir {}'.format(self.p.emb_dir))
+		
 		self.logger = get_logger(self.p.name, self.p.log_dir, self.p.config_dir)
 
 		self.logger.info(vars(self.p)); pprint(vars(self.p))

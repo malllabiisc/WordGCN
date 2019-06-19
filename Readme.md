@@ -2,7 +2,7 @@
 
 Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks](https://arxiv.org/abs/1809.04283).
 
- 
+
 <p align="center">
   <img align="center" src="https://github.com/malllabiisc/WordGCN/blob/master/images/syngcn_model.png" alt="...">
 </p>
@@ -13,6 +13,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
 
 - Compatible with TensorFlow 1.x and Python 3.x.
 - Dependencies can be installed using `requirements.txt`.
+- Install [word-embedding-benchmarks](https://github.com/kudkudak/word-embeddings-benchmarks) used for evaluating learned embeddings.
 
 ### Dataset:
 

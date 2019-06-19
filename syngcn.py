@@ -29,7 +29,7 @@ class SynGCN(Model):
 		while True:
 			max_len = 0;
 			eph_ovr = self.lib.getBatch(self.edges_addr, self.wrds_addr, self.negs_addr, self.samp_addr, self.elen_addr, self.wlen_addr, 
-					  	    self.p.win_size, self.p.num_neg, self.p.batch_size, ctypes.c_float(self.p.sample), self.mode)
+					  	    self.p.win_size, self.p.num_neg, self.p.batch_size, ctypes.c_float(self.p.sample))
 			if eph_ovr == 1: break
 			yield {'edges': self.edges, 'wrds': self.wrds, 'negs': self.negs, 'sample': self.samp, 'elen': self.elen, 'wlen': self.wlen}
 
@@ -421,8 +421,13 @@ class SynGCN(Model):
 		Returns
 		-------
 		"""
-		self.p  = params
+		self.p = params
+
+		if not os.path.isdir(self.p.log_dir): os.system('mkdir {}'.format(self.p.log_dir))
+		if not os.path.isdir(self.p.emb_dir): os.system('mkdir {}'.format(self.p.emb_dir))
+
 		self.logger = get_logger(self.p.name, self.p.log_dir, self.p.config_dir)
+
 
 		self.logger.info(vars(self.p)); pprint(vars(self.p))
 		self.p.batch_size = self.p.batch_size
@@ -559,6 +564,7 @@ if __name__== "__main__":
 	parser.add_argument('-context',  dest="context",        action='store_true',        	help='Include sequential context edges (default: False)')
 	parser.add_argument('-restore',  dest="restore",        action='store_true',        	help='Restore from the previous best saved model')
 	parser.add_argument('-logdb',    dest="log_db",         default='aaai_runs',        	help='MongoDB database for dumping results')
+	parser.add_argument('-embdir',   dest="emb_dir",        default='./embeddings/',       	help='Directory for storing learned embeddings')
 	parser.add_argument('-logdir',   dest="log_dir",        default='./log/',       	help='Log directory')
 	parser.add_argument('-config',   dest="config_dir",     default='./config/',        	help='Config directory')
 

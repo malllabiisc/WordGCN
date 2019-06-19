@@ -77,7 +77,7 @@ void init(){
 extern "C"
 void reset(){
 	freq = 0;
-	fin  = fopen("../src/data/wiki/data.txt", "r");
+	fin  = fopen("./data/data.txt", "r");
 }
 
 int max_len = 0, cntxt_edge_label;
