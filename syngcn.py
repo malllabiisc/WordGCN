@@ -469,7 +469,7 @@ class SynGCN(Model):
 
 		if curr_int > self.best_int_avg:
 			self.logger.info("Saving embedding matrix")
-			f = open('embeddings/{}'.format(self.p.dump_loc), 'w')
+			f = open('{}/{}'.format(self.p.emb_dir, self.p.name), 'w')
 			for id, wrd in self.id2voc.items():
 				f.write('{} {}\n'.format(wrd, ' '.join([str(round(v, 6)) for v in embed_matrix[id].tolist()])))
 
