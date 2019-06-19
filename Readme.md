@@ -40,6 +40,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
   ```
   
 * The trained embeddings will be stored in `./embeddings` directory with name `test_embeddings` .
+* **Note:** As reported in TensorFlow issue [#13048](https://github.com/tensorflow/tensorflow/issues/13048). The current SynGCN's TF-based implementation is slow compared to [Mikolov's word2vec](https://github.com/tmikolov/word2vec) implementation. For training SynGCN on a very large corpus might require to implement the GCN operation in C++ (including backpropagation).
 
 ### Fine-tuning embedding using SemGCN:
 
