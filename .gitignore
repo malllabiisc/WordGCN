@@ -2,7 +2,7 @@
 __pycache__/
 log/
 data/
-
+embeddings/
 
 *.py[cod]
 *$py.class

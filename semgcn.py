@@ -574,7 +574,7 @@ if __name__== "__main__":
 
 	parser.add_argument('-gpu',      dest="gpu",            default='0',                		help='GPU to use')
 	parser.add_argument('-name',     dest="name",           default='test',             		help='Name of the run')
-	parser.add_argument('-embed',    dest="embed_loc",      default='./embeddings/wordgcn.txt',	help='Embedding for initialization')
+	parser.add_argument('-embed',    dest="embed_loc",      required=True,				help='Embedding for initialization')
 	parser.add_argument('-embed_dim',dest="embed_dim",      default=300,     	type=int,       help='Embedding Dimension')
 	parser.add_argument('-total',    dest="total_sents",    default=64640,		type=int,      	help='Total number of sentences in file')
 	parser.add_argument('-lr',       dest="lr",             default=0.001,  	type=float,     help='Learning rate')
@@ -591,6 +591,7 @@ if __name__== "__main__":
 	parser.add_argument('-dump',  	 dest="dump",       	action='store_true',        		help='Dump context and embed matrix')
 	parser.add_argument('-restore',  dest="restore",        action='store_true',        		help='Restore from the previous best saved model')
 	parser.add_argument('-logdir',   dest="log_dir",        default='./log/',       		help='Log directory')
+	parser.add_argument('-embdir',   dest="emb_dir",        default='./embeddings/',       		help='Log directory')
 	parser.add_argument('-config',   dest="config_dir",     default='./config/',        		help='Config directory')
 	parser.add_argument('-subsample',dest="subsample",  	default=1e-4,      type=float,     	help='Subsampling parameter')
 
