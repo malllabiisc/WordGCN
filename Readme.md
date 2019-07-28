@@ -14,6 +14,8 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
 - Compatible with TensorFlow 1.x and Python 3.x.
 - Dependencies can be installed using `requirements.txt`.
 - Install [word-embedding-benchmarks](https://github.com/kudkudak/word-embeddings-benchmarks) used for evaluating learned embeddings.
+  - The test and valid dataset splits used in the paper can be downloaded from [this link](https://drive.google.com/open?id=1VMyddIOgmkskAFN2BvI6c49Y63SHjNfF). Replace the original `~/web_data` folder with the provided one.  
+  - For switching between valid and test split execute `python switch_evaluation_data.py -split <valid/valid>`
 
 ### Dataset:
 
@@ -24,10 +26,11 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
   * `word2freq.txt` contains frequency of words in the corpus.
   * `de2id.txt` mapping of dependency relations to their unique identifiers. 
   * `data.txt` contains the entire Wikipedia corpus with each sentence of corpus stored in the following format:
+
     ```java
     <num_words> <num_dep_rels> tok1 tok2 tok3 ... tokn dep_e1 dep_e2 .... dep_em
     ```
-  
+
     - Here, `num_words` is the number of words and `num_dep_rels`  denotes the number of dependency relations in the sentence.
     - `tok_1, tok_2 ...` is the list of tokens in the sentence and `dep_e1, dep_e2 ...`is the list of dependency relations where each is of form `source_token|destination_token|dep_rel_label`.
 
@@ -56,6 +59,15 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
                    -name fine_tuned_embeddings -gpu 0
   ```
 * The fine-tuned embeddings will be saved in `./embeddings` directory with name `fine_tuned_embeddings`. 
+
+### Extrinsic Evaluation:
+
+For extrinsic evaluation of embeddings the models from the following papers were used:
+
+* NCR (Neural Co-reference Resolution): [Higher-order Coreference Resolution with Coarse-to-fine Inference](https://github.com/kentonl/e2e-coref).
+* NER (Named Entity Recognition): [NeuroNER: an easy-to-use program for named-entity recognition based on neural networks](https://github.com/Franck-Dernoncourt/NeuroNER).
+* POS (Parts of speech tagging): [BiLSTM-CNN-CRF architecture for sequence tagging](https://github.com/UKPLab/emnlp2017-bilstm-cnn-crf).
+* SQuAD (Question Answering): [Simple and Effective Multi-Paragraph Reading Comprehension](https://github.com/allenai/document-qa/tree/master/docqa/elmo)
 
 ### Citation:
 Please cite the following paper if you use this code in your work.
