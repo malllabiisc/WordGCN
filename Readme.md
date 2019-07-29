@@ -73,13 +73,21 @@ For extrinsic evaluation of embeddings the models from the following papers were
 Please cite the following paper if you use this code in your work.
 
 ```tex
-@InProceedings{wordgcn2019,
-  author = "Vashishth, Shikhar and Bhandari, Manik and Yadav, Prateek and Rai, Piyush and Bhattacharyya, Chiranjib and Talukdar, Partha",
-  title = "Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks",
-  booktitle = "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics",
-  year = "2019",
-  publisher = "Association for Computational Linguistics",
-  location = "Florence, Italy",
+@inproceedings{vashishth-etal-2019-incorporating,
+    title = "Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks",
+    author = "Vashishth, Shikhar  and
+      Bhandari, Manik  and
+      Yadav, Prateek  and
+      Rai, Piyush  and
+      Bhattacharyya, Chiranjib  and
+      Talukdar, Partha",
+    booktitle = "Proceedings of the 57th Conference of the Association for Computational Linguistics",
+    month = jul,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/P19-1320",
+    pages = "3308--3318"
 }
 ```
 For any clarification, comments, or suggestions please create an issue or contact [shikhar@iisc.ac.in](http://shikhar-vashishth.github.io).
