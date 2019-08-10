@@ -42,7 +42,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
   python syngcn.py -name test_embeddings -gpu 0
   ```
   
-* The trained embeddings will be stored in `./embeddings` directory with name `test_embeddings` .
+* The trained embeddings will be stored in `./embeddings` directory with the provided name `test_embeddings` .
 * **Note:** As reported in TensorFlow issue [#13048](https://github.com/tensorflow/tensorflow/issues/13048). The current SynGCN's TF-based implementation is slow compared to [Mikolov's word2vec](https://github.com/tmikolov/word2vec) implementation. For training SynGCN on a very large corpus might require multi-GPU or C++ based implementation.
 
 ### Fine-tuning embedding using SemGCN:
@@ -52,7 +52,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
 </p>
 
 - Pre-trained 300-dimensional `SynGCN` embeddings can be downloaded from [here](https://drive.google.com/file/d/1wYgdyjIBC6nIC-bX29kByA0GwnUSR9Hh/view?usp=sharing). 
-- For incorporating semantic information in given embedding run:
+- For incorporating semantic information in given embeddings run:
   ```shell
   python semgcn.py -embed ./embeddings/pretrained_embed.txt 
                    -semantic synonyms -embed_dim 300 
