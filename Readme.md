@@ -39,7 +39,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
 - Execute `make` to compile the C++ code for creating batches.
 - To start training run:
   ```shell
-  python syngcn.py -name test_embeddings -gpu 0
+  python syngcn.py -name test_embeddings -dump -gpu 0
   ```
   
 * The trained embeddings will be stored in `./embeddings` directory with the provided name `test_embeddings` .
@@ -56,7 +56,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
   ```shell
   python semgcn.py -embed ./embeddings/pretrained_embed.txt 
                    -semantic synonyms -embed_dim 300 
-                   -name fine_tuned_embeddings -gpu 0
+                   -name fine_tuned_embeddings -dump -gpu 0
   ```
 * The fine-tuned embeddings will be saved in `./embeddings` directory with name `fine_tuned_embeddings`. 
 
