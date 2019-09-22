@@ -2,8 +2,11 @@
 
 ## Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks  
 
-[![Paper](http://img.shields.io/badge/paper-arxiv.1809.04283-B31B1B.svg)](https://arxiv.org/abs/1809.04283)
 [![Conference](http://img.shields.io/badge/ACL-2019-4b44ce.svg)](https://www.aclweb.org/anthology/P19-1320/)
+[![Paper](http://img.shields.io/badge/paper-arxiv.1809.04283-B31B1B.svg)](https://arxiv.org/abs/1809.04283)
+[![Supplementary](http://img.shields.io/badge/supplementary-pdf-green.svg)](https://shikhar-vashishth.github.io/assets/pdf/wordgcn_supp.pdf)
+[![Poster](http://img.shields.io/badge/poster-pdf-blue.svg)](https://shikhar-vashishth.github.io/assets/pdf/wordgcn_poster.pdf)
+
 
 
 <p align="center">
