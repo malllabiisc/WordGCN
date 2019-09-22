@@ -1,7 +1,13 @@
-## Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks
 
-Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks](https://arxiv.org/abs/1809.04283).
 
+
+<div align="center"> 
+  
+## Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks  
+
+[![Paper](http://img.shields.io/badge/paper-arxiv.1809.04283-B31B1B.svg)](https://arxiv.org/abs/1809.04283)
+[![Conference](http://img.shields.io/badge/ACL-2019-4b44ce.svg)](https://www.aclweb.org/anthology/P19-1320/)
+</div>
 
 <p align="center">
   <img align="center" src="https://github.com/malllabiisc/WordGCN/blob/master/images/syngcn_model.png" alt="...">
