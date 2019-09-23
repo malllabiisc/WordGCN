@@ -25,7 +25,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
 
 ### Dataset:
 
-* We used [Wikipedia corpus](https://dumps.wikimedia.org/enwiki/20180301/). The processed version can be downloaded from [here](https://drive.google.com/file/d/1S1UYXc3PfoNFcNY6tB5ahiugXh5qidz-/view?usp=sharing).
+* We used [Wikipedia corpus](https://dumps.wikimedia.org/enwiki/20180301/). The processed version can be downloaded from [here](https://drive.google.com/file/d/1iFpuKFpDnXCD9QpUw8wStG3ndKl7-KwX/view?usp=sharing).
 
 * The processed dataset includes:
   * `voc2id.txt` mapping of words to to their unique identifiers.
@@ -41,7 +41,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
     - `tok_1, tok_2 ...` is the list of tokens in the sentence and `dep_e1, dep_e2 ...`is the list of dependency relations where each is of form `source_token|destination_token|dep_rel_label`.
 
 ### Training SynGCN embeddings:
-- Download the processed Wikipedia corpus ([link](https://drive.google.com/file/d/1S1UYXc3PfoNFcNY6tB5ahiugXh5qidz-/view?usp=sharing)) and extract it in `./data` directory.
+- Download the processed Wikipedia corpus ([link](https://drive.google.com/file/d/1iFpuKFpDnXCD9QpUw8wStG3ndKl7-KwX/view?usp=sharing)) and extract it in `./data` directory.
 - Execute `make` to compile the C++ code for creating batches.
 - To start training run:
   ```shell
