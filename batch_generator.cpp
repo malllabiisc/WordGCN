@@ -103,6 +103,7 @@ int getBatch(	int *edges, 		// Edges in the sentence graph
 
 		if(feof(fin)) return 1;
 
+
 		tmp = fscanf(fin, "%d %d", &num_wrds, &num_deps);
 
 		for(j = 0; j < num_wrds; j++){
@@ -139,6 +140,7 @@ int getBatch(	int *edges, 		// Edges in the sentence graph
 
 		wlen[i] = b_wlen;
 		elen[i] = b_elen;
+
 	}
 	
 

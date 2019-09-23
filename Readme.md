@@ -19,6 +19,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
 
 - Compatible with TensorFlow 1.x and Python 3.x.
 - Dependencies can be installed using `requirements.txt`.
+  - `pip3 install -r requirements.txt`
 - Install [word-embedding-benchmarks](https://github.com/kudkudak/word-embeddings-benchmarks) used for evaluating learned embeddings.
   - The test and valid dataset splits used in the paper can be downloaded from [this link](https://drive.google.com/open?id=1VMyddIOgmkskAFN2BvI6c49Y63SHjNfF). Replace the original `~/web_data` folder with the provided one.  
   - For switching between valid and test split execute `python switch_evaluation_data.py -split <valid/valid>`
@@ -29,7 +30,7 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
 
 * The processed dataset includes:
   * `voc2id.txt` mapping of words to to their unique identifiers.
-  * `word2freq.txt` contains frequency of words in the corpus.
+  * `id2freq.txt` contains frequency of words in the corpus.
   * `de2id.txt` mapping of dependency relations to their unique identifiers. 
   * `data.txt` contains the entire Wikipedia corpus with each sentence of corpus stored in the following format:
 
@@ -45,9 +46,9 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
 - Execute `make` to compile the C++ code for creating batches.
 - To start training run:
   ```shell
-  python syngcn.py -name test_embeddings -dump -gpu 0
+  python syngcn.py -name test_embeddings -dump -maxsentlen <max_sentence_length in your data.txt> -maxdeplen <max_dependency_length in your data.txt> -gpu 0
   ```
-  
+
 * The trained embeddings will be stored in `./embeddings` directory with the provided name `test_embeddings` .
 * **Note:** As reported in TensorFlow issue [#13048](https://github.com/tensorflow/tensorflow/issues/13048). The current SynGCN's TF-based implementation is slow compared to [Mikolov's word2vec](https://github.com/tmikolov/word2vec) implementation. For training SynGCN on a very large corpus might require multi-GPU or C++ based implementation.
 

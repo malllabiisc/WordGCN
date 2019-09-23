@@ -76,10 +76,10 @@ class SynGCN(Model):
 		self.lib.init()
 
 		# Creating pointers required for creating batches
-		self.edges 	= np.zeros(800 * self.p.batch_size*3, dtype=np.int32)
-		self.wrds     	= np.zeros(40  * self.p.batch_size,   dtype=np.int32)
-		self.samp  	= np.zeros(40  * self.p.batch_size,   dtype=np.int32)
-		self.negs  	= np.zeros(40  * self.p.num_neg * self.p.batch_size, dtype=np.int32)
+		self.edges 	= np.zeros(self.p.max_dep_len * self.p.batch_size*3, dtype=np.int32)
+		self.wrds   = np.zeros(self.p.max_sent_len  * self.p.batch_size,   dtype=np.int32)
+		self.samp  	= np.zeros(self.p.max_sent_len  * self.p.batch_size,   dtype=np.int32)
+		self.negs  	= np.zeros(self.p.max_sent_len  * self.p.num_neg * self.p.batch_size, dtype=np.int32)
 		self.wlen  	= np.zeros(self.p.batch_size, dtype=np.int32)
 		self.elen  	= np.zeros(self.p.batch_size, dtype=np.int32)
 
@@ -321,13 +321,16 @@ class SynGCN(Model):
 		"""
 
 		with tf.variable_scope('Embed_mat'):
-			_wrd_embed 	    = tf.get_variable('embed_matrix',   [self.vocab_size,  self.p.embed_dim], initializer=tf.contrib.layers.xavier_initializer(), regularizer=self.regularizer)
+			_wrd_embed 	    = tf.get_variable('embed_matrix',   [self.vocab_size,  self.p.embed_dim], \
+							initializer=tf.contrib.layers.xavier_initializer(), regularizer=self.regularizer)
 			wrd_pad             = tf.Variable(tf.zeros([1, self.p.embed_dim]), trainable=False)
 			self.embed_matrix   = tf.concat([_wrd_embed, wrd_pad], axis=0)
 
-			_context_matrix     = tf.get_variable('context_matrix', [self.vocab_size,  self.p.embed_dim], initializer=tf.contrib.layers.xavier_initializer(), regularizer=self.regularizer)
+			_context_matrix     = tf.get_variable('context_matrix', [self.vocab_size,  self.p.embed_dim], \
+							initializer=tf.contrib.layers.xavier_initializer(), regularizer=self.regularizer)
 			self.context_matrix = tf.concat([_context_matrix, wrd_pad], axis=0)
-			self.context_bias   = tf.get_variable('context_bias', 	[self.vocab_size+1], 		      initializer=tf.constant_initializer(0.0),           regularizer=self.regularizer)
+			self.context_bias   = tf.get_variable('context_bias', 	[self.vocab_size+1], 		      \
+							initializer=tf.constant_initializer(0.0),           regularizer=self.regularizer)
 
 		embed   = tf.nn.embedding_lookup(self.embed_matrix, self.sent_wrds)
 		
@@ -458,8 +461,7 @@ class SynGCN(Model):
 		Returns
 		-------
 		"""
-		embed_matrix, \
-		context_matrix 	= sess.run([self.embed_matrix, self.context_matrix])
+		embed_matrix, context_matrix 	= sess.run([self.embed_matrix, self.context_matrix])
 		voc2vec 	= {wrd: embed_matrix[wid] for wrd, wid in self.voc2id.items()}
 		embedding 	= Embedding.from_dict(voc2vec)
 		results		= evaluate_on_all(embedding)
@@ -567,6 +569,10 @@ if __name__== "__main__":
 	parser.add_argument('-embdir',   dest="emb_dir",        default='./embeddings/',       	help='Directory for storing learned embeddings')
 	parser.add_argument('-logdir',   dest="log_dir",        default='./log/',       	help='Log directory')
 	parser.add_argument('-config',   dest="config_dir",     default='./config/',        	help='Config directory')
+	# Added these two arguments to enable others to personalize the training set. Otherwise, the programme may suffer from memory overflow easily.
+	# It is suggested that the -maxlen be set no larger than 100.
+	parser.add_argument('-maxsentlen',	 dest="max_sent_len",	default=40, 	  type=int,		help='Max length of the sentences in data.txt (default: 40)')
+	parser.add_argument('-maxdeplen',dest="max_dep_len", 	default=800,	  type=int,		help='Max length of the dependency relations in data.txt (default: 800)')
 
 	args = parser.parse_args()
 
