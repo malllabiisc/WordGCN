@@ -15,7 +15,8 @@ struct Entry {
 
 char *word = (char *)malloc(sizeof(char) * 1000);
 int wid, offset = 0, k, idx, freq, i, j, tmp;
-int num_wrds, num_deps, num_wsd, src, dest, lbl;
+// int num_wrds, num_deps, num_wsd, src, dest, lbl;
+int num_wrds, num_deps, src, dest, lbl;
 int cnt_edges, cnt_wrds, cnt_negs, cnt_sample, target, voc_size, b_elen, b_wlen;
 unsigned long long next_random = (long long)1;
 
@@ -104,7 +105,8 @@ int getBatch(	int *edges, 		// Edges in the sentence graph
 
 		if(feof(fin)) return 1;
 
-		tmp = fscanf(fin, "%d %d %d", &num_wrds, &num_deps, &num_wsd);
+		// tmp = fscanf(fin, "%d %d %d", &num_wrds, &num_deps, &num_wsd);
+		tmp = fscanf(fin, "%d %d", &num_wrds, &num_deps);
 
 		for(j = 0; j < num_wrds; j++){
 			tmp = fscanf(fin, "%d ", &wid);
@@ -141,7 +143,7 @@ int getBatch(	int *edges, 		// Edges in the sentence graph
 		wlen[i] = b_wlen;
 		elen[i] = b_elen;
 
-		for(j = 0; j < num_wsd; j++) tmp = fscanf(fin, "%d ", &wid);
+		// for(j = 0; j < num_wsd; j++) tmp = fscanf(fin, "%d ", &wid);
 	}
 	
 
