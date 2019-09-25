@@ -27,7 +27,7 @@ class SynGCN(Model):
 		"""
 		self.lib.reset()
 		while True:
-			max_len = 0;
+			# max_len = 0; unused variable
 			eph_ovr = self.lib.getBatch(self.edges_addr, self.wrds_addr, self.negs_addr, self.samp_addr, self.elen_addr, self.wlen_addr, 
 					  	    self.p.win_size, self.p.num_neg, self.p.batch_size, ctypes.c_float(self.p.sample))
 			if eph_ovr == 1: break
@@ -61,7 +61,7 @@ class SynGCN(Model):
 		self.vocab_size     = len(self.voc2id)
 		self.wrd_list	    = [self.id2voc[i] for i in range(self.vocab_size)]
 
-		self.de2id	    = read_mappings('./data/de2id.txt');    self.de2id   = {k:      int(v) for k, v in self.de2id.items()}; 
+		self.de2id	    = read_mappings('./data/de2id.txt');    self.de2id   = {k:      int(v) for k, v in self.de2id.items()}
 		self.num_deLabel    = len(self.de2id)
 
 		# Calculating rejection probability
@@ -321,8 +321,14 @@ class SynGCN(Model):
 		"""
 
 		with tf.variable_scope('Embed_mat'):
+
+			if self.p.embed_loc: # if target embeddings for initialization is assigned
+				embed_init		= getEmbeddings(self.p.embed_loc, [self.id2voc[i] for i in range(len(self.voc2id))], self.p.embed_dim)
+			else:
+				embed_init		= tf.contrib.layers.xavier_initializer()
+
 			_wrd_embed 	    = tf.get_variable('embed_matrix',   [self.vocab_size,  self.p.embed_dim], \
-							initializer=tf.contrib.layers.xavier_initializer(), regularizer=self.regularizer)
+							initializer=embed_init, regularizer=self.regularizer)
 			wrd_pad             = tf.Variable(tf.zeros([1, self.p.embed_dim]), trainable=False)
 			self.embed_matrix   = tf.concat([_wrd_embed, wrd_pad], axis=0)
 
