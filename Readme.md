@@ -80,7 +80,7 @@ For extrinsic evaluation of embeddings the models from the following papers were
 Please cite the following paper if you use this code in your work.
 
 ```
-@inproceedings{vashishth-etal-2019-incorporating,
+@inproceedings{wordgcn2019,
     title = "Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks",
     author = "Vashishth, Shikhar  and
       Bhandari, Manik  and
