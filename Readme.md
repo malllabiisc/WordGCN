@@ -46,7 +46,10 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
 - Execute `make` to compile the C++ code for creating batches.
 - To start training run:
   ```shell
-  python syngcn.py -name test_embeddings -dump -maxsentlen <max_sentence_length in your data.txt> -maxdeplen <max_dependency_length in your data.txt> -embed_dim 300 -gpu 0
+  python syngcn.py -name test_embeddings -gpu 0 -dump 
+                   -maxsentlen <max_sentence_length in your data.txt> 
+                   -maxdeplen <max_dependency_length in your data.txt> 
+                   -embed_dim 300
   ```
 
 * The trained embeddings will be stored in `./embeddings` directory with the provided name `test_embeddings` .
