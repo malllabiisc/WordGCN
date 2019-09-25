@@ -126,7 +126,14 @@ def getEmbeddings(embed_loc, wrd_list, embed_dims):
 	wrd2embed = {}
 	for line in open(embed_loc, encoding='utf-8', errors='ignore'):
 		data = line.strip().split(' ')
-		wrd, embed = data[0], data[1:]
+
+		# wrd, embed = data[0], data[1:]
+
+		# Some words may be separated by space (telephone numbers, for example).
+		# It's more robust to load data as follows.
+		embed = data[-1*embed_dims: ] 
+		wrd   = ' '.join(data[: -1*embed_dims])
+
 		embed = list(map(float, embed))
 		wrd2embed[wrd] = embed
 
