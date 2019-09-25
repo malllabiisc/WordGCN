@@ -322,13 +322,16 @@ class SynGCN(Model):
 
 		with tf.variable_scope('Embed_mat'):
 
-			if self.p.embed_loc: # if target embeddings for initialization is assigned
+			# when target embeddings for initialization is assigned
+			if self.p.embed_loc: 
 				embed_init		= getEmbeddings(self.p.embed_loc, [self.id2voc[i] for i in range(len(self.voc2id))], self.p.embed_dim)
+				_wrd_embed 	    = tf.get_variable('embed_matrix', \
+							initializer=embed_init, regularizer=self.regularizer)
 			else:
 				embed_init		= tf.contrib.layers.xavier_initializer()
-
-			_wrd_embed 	    = tf.get_variable('embed_matrix',   [self.vocab_size,  self.p.embed_dim], \
+				_wrd_embed 	    = tf.get_variable('embed_matrix',   [self.vocab_size,  self.p.embed_dim], \
 							initializer=embed_init, regularizer=self.regularizer)
+
 			wrd_pad             = tf.Variable(tf.zeros([1, self.p.embed_dim]), trainable=False)
 			self.embed_matrix   = tf.concat([_wrd_embed, wrd_pad], axis=0)
 
