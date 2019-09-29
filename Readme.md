@@ -76,7 +76,7 @@ For extrinsic evaluation of embeddings the models from the following papers were
 
 * NCR (Neural Co-reference Resolution): [Higher-order Coreference Resolution with Coarse-to-fine Inference](https://github.com/kentonl/e2e-coref).
 * NER (Named Entity Recognition): [NeuroNER: an easy-to-use program for named-entity recognition based on neural networks](https://github.com/Franck-Dernoncourt/NeuroNER).
-* POS (Parts of speech tagging): [BiLSTM-CNN-CRF architecture for sequence tagging](https://github.com/UKPLab/emnlp2017-bilstm-cnn-crf).
+* POS (Part-of-speech tagging): [BiLSTM-CNN-CRF architecture for sequence tagging](https://github.com/UKPLab/emnlp2017-bilstm-cnn-crf).
 * SQuAD (Question Answering): [Simple and Effective Multi-Paragraph Reading Comprehension](https://github.com/allenai/document-qa/tree/master/docqa/elmo)
 
 ### Citation:
