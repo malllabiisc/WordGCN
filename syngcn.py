@@ -243,9 +243,7 @@ class SynGCN(Model):
 						if self.p.dropout != 1.0: inp_loop  = tf.nn.dropout(inp_loop, keep_prob=self.p.dropout)
 
 						if w_gating:
-							inp_gloop = tf.tensordot(gcn_in, w_gloop, axes=[2,0])
-							loop_gsig = tf.sigmoid(inp_gloop)
-							loop_act  = inp_loop * loop_gsig
+							loop_act = tf.tensordot(gcn_in, tf.sigmoid(w_gloop), axes=[2,0])
 						else:
 							loop_act = inp_loop
 
@@ -277,10 +275,8 @@ class SynGCN(Model):
 
 						if self.p.dropout != 1.0: in_t    = tf.nn.dropout(in_t, keep_prob=self.p.dropout)
 						if w_gating:
-							inp_gin = tf.tensordot(gcn_in, w_gin, axes=[2,0]) + tf.expand_dims(b_gin, axis=0)
-							in_gate = self.aggregate(inp_gin, adj_matrix)
-							in_gsig = tf.sigmoid(in_gate)
-							in_act  = in_t * in_gsig
+							inp_gin = tf.tensordot(gcn_in, tf.sigmoid(w_gin), axes=[2,0]) + tf.expand_dims(b_gin, axis=0)
+							in_act  = self.aggregate(inp_gin, adj_matrix)
 						else:
 							in_act   = in_t
 
@@ -292,10 +288,8 @@ class SynGCN(Model):
 						if self.p.dropout != 1.0: out_t    = tf.nn.dropout(out_t, keep_prob=self.p.dropout)
 
 						if w_gating:
-							inp_gout = tf.tensordot(gcn_in, w_gout, axes=[2,0]) + tf.expand_dims(b_gout, axis=0)
-							out_gate = self.aggregate(inp_gout, adj_matrix)
-							out_gsig = tf.sigmoid(out_gate)
-							out_act  = out_t * out_gsig
+							inp_gout = tf.tensordot(gcn_in, tf.sigmoid(w_gout), axes=[2,0]) + tf.expand_dims(b_gout, axis=0)
+							out_act  = self.aggregate(inp_gout, adj_matrix)
 						else:
 							out_act = out_t
 
