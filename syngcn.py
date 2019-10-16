@@ -84,13 +84,12 @@ class SynGCN(Model):
 		self.elen  	= np.zeros(self.p.batch_size, dtype=np.int32)
 
 		# Pointer address of above arrays
-		self.edges_addr = self.edges. __array_interface__['data'][0]
-		self.wrds_addr  = self.wrds.  __array_interface__['data'][0]
-		self.negs_addr  = self.negs.  __array_interface__['data'][0]
-		self.samp_addr  = self.samp.  __array_interface__['data'][0]
-		self.wlen_addr  = self.wlen.  __array_interface__['data'][0]
-		self.elen_addr  = self.elen.  __array_interface__['data'][0]
-
+		self.edges_addr = self.edges.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+		self.wrds_addr = self.wrds.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+		self.negs_addr = self.negs.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+		self.samp_addr = self.samp.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+		self.wlen_addr = self.wlen.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+		self.elen_addr = self.elen.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
 
 	def add_placeholders(self):
 		"""
@@ -574,7 +573,7 @@ if __name__== "__main__":
 
 	# Added these two arguments to enable others to personalize the training set. Otherwise, the programme may suffer from memory overflow easily.
 	# It is suggested that the -maxlen be set no larger than 100.
-	parser.add_argument('-maxsentlen',dest="max_sent_len",	default=40, 	  type=int,	help='Max length of the sentences in data.txt (default: 40)')
+	parser.add_argument('-maxsentlen',dest="max_sent_len",	default=50, 	  type=int,	help='Max length of the sentences in data.txt (default: 40)')
 	parser.add_argument('-maxdeplen', dest="max_dep_len", 	default=800,	  type=int,	help='Max length of the dependency relations in data.txt (default: 800)')
 
 	args = parser.parse_args()
