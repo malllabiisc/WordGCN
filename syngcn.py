@@ -268,26 +268,31 @@ class SynGCN(Model):
 
 
 					with tf.name_scope('in_arcs-%s_name-%s_layer-%d' % (lbl, name, layer)):
+
 						inp_in     = tf.tensordot(gcn_in, w_in, axes=[2,0]) + tf.expand_dims(b_in, axis=0)
 						adj_matrix = tf.transpose(adj_mat[lbl], [0,2,1])
-						in_t 	   = self.aggregate(inp_in, adj_matrix)							
 
-						if self.p.dropout != 1.0: in_t    = tf.nn.dropout(in_t, keep_prob=self.p.dropout)
+						if self.p.dropout != 1.0: 
+							inp_in = tf.nn.dropout(inp_in, keep_prob=self.p.dropout)
+
 						if w_gating:
-							inp_gin = tf.tensordot(gcn_in, tf.sigmoid(w_gin), axes=[2,0]) + tf.expand_dims(b_gin, axis=0)
-							in_act  = self.aggregate(inp_gin, adj_matrix)
+							inp_gin = tf.tensordot(gcn_in, w_gin, axes=[2,0]) + tf.expand_dims(b_gin, axis=0)
+							inp_in  = inp_in * tf.sigmoid(inp_gin)
+							in_act  = self.aggregate(inp_in, adj_matrix)
 						else:
-							in_act   = in_t
+							in_act  = in_t
+
 
 					with tf.name_scope('out_arcs-%s_name-%s_layer-%d' % (lbl, name, layer)):
 						inp_out    = tf.tensordot(gcn_in, w_out, axes=[2,0]) + tf.expand_dims(b_out, axis=0)
 						adj_matrix = adj_mat[lbl]
-						out_t      = self.aggregate(inp_out, adj_matrix)
 
-						if self.p.dropout != 1.0: out_t    = tf.nn.dropout(out_t, keep_prob=self.p.dropout)
+						if self.p.dropout != 1.0: 
+							inp_out = tf.nn.dropout(inp_out, keep_prob=self.p.dropout)
 
 						if w_gating:
-							inp_gout = tf.tensordot(gcn_in, tf.sigmoid(w_gout), axes=[2,0]) + tf.expand_dims(b_gout, axis=0)
+							inp_gout = tf.tensordot(gcn_in, w_gout, axes=[2,0]) + tf.expand_dims(b_gout, axis=0)
+							inp_out  = inp_out * tf.sigmoid(inp_gout)
 							out_act  = self.aggregate(inp_gout, adj_matrix)
 						else:
 							out_act = out_t
