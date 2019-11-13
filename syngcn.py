@@ -280,8 +280,8 @@ class SynGCN(Model):
 							inp_in  = inp_in * tf.sigmoid(inp_gin)
 							in_act  = self.aggregate(inp_in, adj_matrix)
 						else:
-							in_act  = in_t
-
+							in_act = self.aggregate(inp_in, adj_matrix)
+							
 
 					with tf.name_scope('out_arcs-%s_name-%s_layer-%d' % (lbl, name, layer)):
 						inp_out    = tf.tensordot(gcn_in, w_out, axes=[2,0]) + tf.expand_dims(b_out, axis=0)
@@ -293,9 +293,9 @@ class SynGCN(Model):
 						if w_gating:
 							inp_gout = tf.tensordot(gcn_in, w_gout, axes=[2,0]) + tf.expand_dims(b_gout, axis=0)
 							inp_out  = inp_out * tf.sigmoid(inp_gout)
-							out_act  = self.aggregate(inp_gout, adj_matrix)
+							out_act  = self.aggregate(inp_out, adj_matrix)
 						else:
-							out_act = out_t
+							out_act = self.aggregate(inp_out, adj_matrix)
 
 
 					act_sum += in_act + out_act
