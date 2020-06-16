@@ -18,7 +18,11 @@
 <h2 align="center">
   Overview of WordGCN
 </h2>
-<img align="center"  src="./images/syngcn_model.png" alt="...">
+
+<h4 align="center">
+ <img align="center"  src="./images/syngcn_model.png" alt="...">
+</h4>
+
 *Overview of SynGCN: SynGCN employs Graph Convolution Network for utilizing dependency context for learning word embeddings. For each word in vocabulary, the model learns its representation by aiming to predict each word based on its dependency context encoded using GCNs. Please refer Section 5 of the paper for more details.*
 
 ### Dependencies
