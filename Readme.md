@@ -9,15 +9,16 @@
   <a href="https://www.aclweb.org/anthology/P19-1320/"><img src="http://img.shields.io/badge/ACL-2019-4b44ce.svg"></a>
   <a href="https://arxiv.org/abs/1809.04283"><img src="http://img.shields.io/badge/Paper-PDF-red.svg"></a>
   <a href="https://shikhar-vashishth.github.io/assets/pdf/wordgcn_supp.pdf"><img src="http://img.shields.io/badge/Supplementary-PDF-B31B1B.svg"></a>
-  <a href="https://shikhar-vashishth.github.io/assets/pdf/wordgcn_poster.pdf"><img src="http://img.shields.io/badge/Poster-PDF-9cf.svg"></a>
+  <a href="https://shikhar-vashishth.github.io/assets/pdf/wordgcn_poster.pdf"><img src="http://img.shields.io/badge/Poster-PDF-orange.svg"></a>
   <a href="https://github.com/malllabiisc/WordGCN/blob/master/LICENSE">
     <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg">
   </a>
 </p>
+
 <h2 align="center">
   Overview of WordGCN
-  <img align="center"  src="./images/syngcn_model.png" alt="...">
 </h2>
+<img align="center"  src="./images/syngcn_model.png" alt="...">
 *Overview of SynGCN: SynGCN employs Graph Convolution Network for utilizing dependency context for learning word embeddings. For each word in vocabulary, the model learns its representation by aiming to predict each word based on its dependency context encoded using GCNs. Please refer Section 5 of the paper for more details.*
 
 ### Dependencies
