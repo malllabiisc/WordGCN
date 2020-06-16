@@ -1,18 +1,23 @@
 
+<h1 align="center">
+  WordGCN
+</h1>
 
-## Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks  
-
-[![Conference](http://img.shields.io/badge/ACL-2019-4b44ce.svg)](https://www.aclweb.org/anthology/P19-1320/)
-[![Paper](http://img.shields.io/badge/paper-arxiv.1809.04283-B31B1B.svg)](https://arxiv.org/abs/1809.04283)
-[![Supplementary](http://img.shields.io/badge/supplementary-pdf-green.svg)](https://shikhar-vashishth.github.io/assets/pdf/wordgcn_supp.pdf)
-[![Poster](http://img.shields.io/badge/poster-pdf-blue.svg)](https://shikhar-vashishth.github.io/assets/pdf/wordgcn_poster.pdf)
-
-Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks](https://arxiv.org/abs/1809.04283).
+<h4 align="center">Incorporating Syntactic and Semantic Information in Word Embeddings using Graph Convolutional Networks </h4>
 
 <p align="center">
-  <img align="center" src="https://github.com/malllabiisc/WordGCN/blob/master/images/syngcn_model.png" alt="...">
+  <a href="https://www.aclweb.org/anthology/P19-1320/"><img src="http://img.shields.io/badge/ACL-2019-4b44ce.svg"></a>
+  <a href="https://arxiv.org/abs/1809.04283"><img src="http://img.shields.io/badge/Paper-PDF-red.svg"></a>
+  <a href="https://shikhar-vashishth.github.io/assets/pdf/wordgcn_supp.pdf"><img src="http://img.shields.io/badge/Supplementary-PDF-B31B1B.svg"></a>
+  <a href="https://shikhar-vashishth.github.io/assets/pdf/wordgcn_poster.pdf"><img src="http://img.shields.io/badge/Poster-PDF-9cf.svg"></a>
+  <a href="https://github.com/malllabiisc/WordGCN/blob/master/LICENSE">
+    <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg">
+  </a>
 </p>
-
+<h2 align="center">
+  Overview of WordGCN
+  <img align="center"  src="./images/syngcn_model.png" alt="...">
+</h2>
 *Overview of SynGCN: SynGCN employs Graph Convolution Network for utilizing dependency context for learning word embeddings. For each word in vocabulary, the model learns its representation by aiming to predict each word based on its dependency context encoded using GCNs. Please refer Section 5 of the paper for more details.*
 
 ### Dependencies
@@ -26,7 +31,14 @@ Source code for [ACL 2019](http://acl2019.org) paper: [Incorporating Syntactic a
 
 ### Dataset:
 
-* We used [Wikipedia corpus](https://dumps.wikimedia.org/enwiki/20180301/). The processed version can be downloaded from [here](https://drive.google.com/file/d/1iFpuKFpDnXCD9QpUw8wStG3ndKl7-KwX/view?usp=sharing).
+* We used [Wikipedia corpus](https://dumps.wikimedia.org/enwiki/20180301/). The processed version can be downloaded from [here](https://drive.google.com/file/d/1iFpuKFpDnXCD9QpUw8wStG3ndKl7-KwX/view?usp=sharing)  or using the script below:
+
+  ```shell
+  pip install gdown
+  gdown --id 1iFpuKFpDnXCD9QpUw8wStG3ndKl7-KwX -O data.zip
+  unzip data.zip
+  rm data.zip
+  ```
 
 * The processed dataset includes:
   * `voc2id.txt` mapping of words to to their unique identifiers.
