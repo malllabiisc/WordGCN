@@ -1,5 +1,5 @@
 numpy==1.16.4
-tensorflow==1.13.1
+tensorflow==2.7.2
 scipy==1.3.0
 sparse==0.7.0
 tqdm==4.32.2
